@@ -1,10 +1,16 @@
 import express, { type Application, type Request, type Response } from "express"
 import { config } from "./config/config";
+import { authRouter } from "./Modules/Auth/auth.router";
 const app : Application = express();
 const port = config.port;
-
+app.use(express.json())
+app.use(express.text());
 app.get("/", (req : Request, res : Response) => {
-  res.send("Hello World! hridoy");
+  res.status(200).json({
+    success: true,
+    message: "This is root route",
+  });
 });
+app.use("/api/auth" , authRouter);
 
 export default app
