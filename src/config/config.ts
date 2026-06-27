@@ -10,5 +10,7 @@ dotenv.config({
 export const config = {
   port: process.env.PORT,
   connectionString: process.env.CONNECTIONSTRING,
+  ACCESS_SECRATE: process.env.ACCESS_SECRATE,
+  REFRESH_SECRATE: process.env.REFRESH_SECRATE,
 };
 
