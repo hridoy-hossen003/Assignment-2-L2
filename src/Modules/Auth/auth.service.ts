@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, Result } from "pg";
 import { pool } from "../../Database/db";
 import bcrypt from "bcrypt";
 import type { AUser } from "../../interface/UserInterface";
@@ -28,7 +28,11 @@ const getUserFromDb = async () => {
     const result = await pool.query(`
         SELECT * FROM users
         `);
-    return result;
+     const resultWithOutPass = result.rows.map(user => {
+    const {password , ...rest} = user 
+    return rest
+     })
+    return resultWithOutPass;
   } catch (error: any) {
     throw new Error(error.message);
   }
@@ -82,7 +86,7 @@ const loginUserDb = async (payload: AUser) => {
 
   const accessToken =jwt.sign(jwtpayload, config.ACCESS_SECRATE as string , {expiresIn : '1d'})
   const refreshToken = jwt.sign(jwtpayload , config.REFRESH_SECRATE as string , {expiresIn:"30d"})
-  return {accessToken , refreshToken}
+  return {user,accessToken , refreshToken}
 };
 
 export const authService = {

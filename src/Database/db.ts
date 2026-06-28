@@ -18,8 +18,21 @@ export const initDb = async () => {
             )
             `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS issues(
+      id SERIAL PRIMARY KEY,
+      title VARCHAR(150) NOT NULL,
+      description TEXT CHECK (LENGTH(description) >= 200) NOT NULL,
+      type VARCHAR(20) CHECK (type IN('bug' , 'feature_request')) NOT NULL,
+      status VARCHAR(20) DEFAULT 'open' CHECK(status IN('open','in_progress','resolved')) NOT NULL,
+     reporter_id INT NOT NULL,
+     created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+
+      )
+      `);
     console.log("database created successfully..");
   } catch (error: any) {
-    throw new Error("there is something unusule in database");
+    throw new Error(error.message);
   }
 };

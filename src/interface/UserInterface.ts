@@ -4,3 +4,5 @@ export interface AUser {
   password: string;
   role?: "contributor" | "maintainer";
 }
+
+export type typeRoles = "contributor" | "maintainer";

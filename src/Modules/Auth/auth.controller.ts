@@ -26,7 +26,7 @@ const getUsers = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "get user successfully",
-      data: result.rows,
+      data: result,
     });
   } catch (error: any) {
     await res.status(500).json({
@@ -63,8 +63,15 @@ await res.status(404).json({
 
 const loginUser = async (req: Request, res: Response) => {
   try {
-    const result = await authService.loginUserDb(req.body);
-    responseMacker(200 , true , "login successfully" , result , res)
+    const {refreshToken , ...rest} = await authService.loginUserDb(req.body);
+
+    res.cookie("refreshToken" , refreshToken,{
+      secure: false,
+      sameSite : 'lax',
+      httpOnly:true, //for keeping away from js reading.
+    })
+  
+    responseMacker(200, true, "login successfully", res, rest) ;
   } catch (error : any) {
     responseMacker(401,false , error.message , error ,res)
   }
