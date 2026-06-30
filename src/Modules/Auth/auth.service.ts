@@ -53,40 +53,50 @@ const getSpacificUserFromDB = async (id: number) => {
 };
 
 const loginUserDb = async (payload: AUser) => {
-  const { email, password } = payload;
-  const userData = await pool.query(
-    `
+  try {
+    const { email, password } = payload;
+    const userData = await pool.query(
+      `
         SELECT * FROM users WHERE email = $1
         `,
-    [email],
-  );
+      [email],
+    );
 
-  if (userData.rows.length === 0) {
-    throw new Error("user not exists");
+    if (userData.rows.length === 0) {
+      throw new Error("user not exists");
+    }
+
+    const user = userData.rows[0];
+
+    const checkPassword = await bcrypt.compare(
+      String(password),
+      user.password as string,
+    );
+    if (!checkPassword) {
+      throw new Error("invalide password");
+    }
+
+    const jwtpayload: JwtPayload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      role: user.role,
+    };
+
+    const accessToken = jwt.sign(jwtpayload, config.ACCESS_SECRATE as string, {
+      expiresIn: "1d",
+    });
+    const refreshToken = jwt.sign(
+      jwtpayload,
+      config.REFRESH_SECRATE as string,
+      { expiresIn: "30d" },
+    );
+    delete user.password;
+    return { user, accessToken, refreshToken };
+  } catch (error : any) {
+    throw new Error(error.message)
   }
-
-  const user = userData.rows[0];
-
-  const checkPassword = await bcrypt.compare(
-    String(password),
-    user.password as string,
-  );
-  if (!checkPassword) {
-    throw new Error("invalide password");
-  }
-
-
-  const jwtpayload : JwtPayload = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    password: user.password,
-    role: user.role,
-  };
-
-  const accessToken =jwt.sign(jwtpayload, config.ACCESS_SECRATE as string , {expiresIn : '1d'})
-  const refreshToken = jwt.sign(jwtpayload , config.REFRESH_SECRATE as string , {expiresIn:"30d"})
-  return {user,accessToken , refreshToken}
 };
 
 export const authService = {
