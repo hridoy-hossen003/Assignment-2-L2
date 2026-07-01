@@ -22,7 +22,13 @@ const createIssue = async (req: Request, res: Response) => {
 
 const getAllIssues = async (req: Request, res: Response) => {
   try {
-    const result = await issuesService.getIssuesFromDb();
+    const {sort , type , status} = req.query
+   
+    const result = await issuesService.getIssuesFromDb({
+      sort: sort as string | undefined,
+      type: type as string | undefined,
+      status: status as string | undefined,
+    });
     responseMacker(
       200,
       true,

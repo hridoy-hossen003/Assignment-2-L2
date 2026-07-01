@@ -23,11 +23,32 @@ VALUES ($1,$2,$3,$4) RETURNING *
   }
 };
 
-const getIssuesFromDb = async () => {
+const getIssuesFromDb = async (filter: {
+  sort?: string | undefined;
+  type?: string | undefined;
+  status?: string | undefined;
+}) => {
   try {
+   
+    const condition : string[] = [] ;
+    const values : string[] = [] ;
+if(filter.type){
+  values.push(filter.type);
+  condition.push(`type = $${values.length}`)
+}
+
+if(filter.status){
+  values.push(filter.status);
+  condition.push(`status = $${values.length}`)
+}
+const whereClause = condition.length > 0 ? `WHERE ${condition.join(" AND ")}` : " ";
+const orderClause = filter.sort === 'oldest' ? "ORDER BY created_At ASC" : "ORDER BY created_At DESC" ;
+
     const result = await pool.query(`
-    SELECT * FROM issues
-    `);
+    SELECT * FROM issues ${whereClause} ${orderClause}
+    `, values);
+
+  
     const issues = result.rows;
     const reported_ids = [
       ...new Set(result.rows.map((issues) => issues.reporter_id)),
