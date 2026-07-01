@@ -41,7 +41,23 @@ const getAllIssues = async (req: Request, res: Response) => {
   }
 };
 
+const getSingleIssue = async (req: Request, res: Response) => {
+ try {
+   const { id } = req.params;
+   const result = issuesService.getSingleIssueDb(Number(id));
+   responseMacker(
+     200,
+     true,
+     "Issue retrived successfully",
+     res,
+     (await result),
+   );
+ } catch (error : any) {
+  responseMacker(404 , false , error.message,res  )
+ }
+}
 export const issuesController = {
   createIssue,
   getAllIssues,
+  getSingleIssue,
 };

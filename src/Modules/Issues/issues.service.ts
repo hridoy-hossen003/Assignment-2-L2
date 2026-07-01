@@ -29,26 +29,31 @@ const getIssuesFromDb = async (filter: {
   status?: string | undefined;
 }) => {
   try {
-   
-    const condition : string[] = [] ;
-    const values : string[] = [] ;
-if(filter.type){
-  values.push(filter.type);
-  condition.push(`type = $${values.length}`)
-}
+    const condition: string[] = [];
+    const values: string[] = [];
+    if (filter.type) {
+      values.push(filter.type);
+      condition.push(`type = $${values.length}`);
+    }
 
-if(filter.status){
-  values.push(filter.status);
-  condition.push(`status = $${values.length}`)
-}
-const whereClause = condition.length > 0 ? `WHERE ${condition.join(" AND ")}` : " ";
-const orderClause = filter.sort === 'oldest' ? "ORDER BY created_At ASC" : "ORDER BY created_At DESC" ;
+    if (filter.status) {
+      values.push(filter.status);
+      condition.push(`status = $${values.length}`);
+    }
+    const whereClause =
+      condition.length > 0 ? `WHERE ${condition.join(" AND ")}` : " ";
+    const orderClause =
+      filter.sort === "oldest"
+        ? "ORDER BY created_At ASC"
+        : "ORDER BY created_At DESC";
 
-    const result = await pool.query(`
+    const result = await pool.query(
+      `
     SELECT * FROM issues ${whereClause} ${orderClause}
-    `, values);
+    `,
+      values,
+    );
 
-  
     const issues = result.rows;
     const reported_ids = [
       ...new Set(result.rows.map((issues) => issues.reporter_id)),
@@ -80,7 +85,41 @@ const orderClause = filter.sort === 'oldest' ? "ORDER BY created_At ASC" : "ORDE
   }
 };
 
+const getSingleIssueDb = async (id: number) => {
+  try {
+    const issue = await pool.query(
+      `
+  SELECT * FROM issues WHERE id = $1
+  `,
+      [id],
+    );
+    if (issue.rows.length === 0) {
+      throw new Error("Invalid credential..!");
+    }
+    const reporters_id = issue.rows[0].reporter_id;
+    const user = await pool.query(
+      `
+    SELECT id , name , role FROM users WHERE id = $1
+    `,
+      [reporters_id],
+    );
+    const { reporter_id, created_at, updated_at, ...rest } = issue.rows[0];
+    const reporter = user.rows[0];
+    const data = {
+      ...rest,
+      reporter,
+      created_at,
+      updated_at,
+    };
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
 export const issuesService = {
   createIssueInDb,
   getIssuesFromDb,
+  getSingleIssueDb,
 };
