@@ -3,6 +3,8 @@ import type { AUser } from "../../interface/UserInterface";
 import { pool } from "../../Database/db";
 import { responseMacker } from "../Utilities/response";
 import { error } from "node:console";
+import { title } from "node:process";
+import { describe } from "node:test";
 
 const createIssueInDb = async (payload: any, reporter_id: number) => {
   try {
@@ -118,8 +120,29 @@ const getSingleIssueDb = async (id: number) => {
   }
 };
 
+const updateIssueDb = async (payload: {
+  title: string | undefined;
+  description: string | undefined;
+  type: string | undefined;
+  issueId: string | undefined;
+}) => {
+  const { title, description, type, issueId } = payload;
+  const result = await pool.query(
+    `
+  UPDATE issues SET title = COALESCE($1,  title) , description = COALESCE($2,  description) , type = COALESCE($3 ,type) , updated_at = NOW() WHERE id = $4  RETURNING *
+  `,
+    [title, description, type, issueId],
+  );
+
+  return result;
+};
+
 export const issuesService = {
   createIssueInDb,
   getIssuesFromDb,
   getSingleIssueDb,
+  updateIssueDb,
 };
+// "title": "Updated: Database pool exhaustion fix needed",
+//   "description": "Updated description with reproduction steps...",
+//   "type": "bug"
